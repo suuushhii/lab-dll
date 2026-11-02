@@ -1,0 +1,30 @@
+name: build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+      - name: Build DLL
+        run: cl /nologo /utf-8 /TC /LD StudyTasks.c /link /DEF:StudyTasks.def /OUT:StudyTasks.dll
+      - name: Exports table
+        run: dumpbin /exports StudyTasks.dll
+      - name: Build and run implicit client
+        run: |
+          cl /nologo /utf-8 /TC main.c /Fe:client_implicit.exe
+          .\client_implicit.exe
+      - name: Build and run explicit client
+        run: |
+          cl /nologo /utf-8 /TC main_explicit.c /Fe:client_explicit.exe
+          .\client_explicit.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: |
+            StudyTasks.dll
+            StudyTasks.lib
+            client_implicit.exe
+            client_explicit.exe
